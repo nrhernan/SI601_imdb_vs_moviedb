@@ -1,0 +1,99 @@
+# -*- coding: utf-8 -*-
+
+#Use the Web service http://www.themoviedb.org/documentation/api to get themoviedb.org rating for
+#each of the top 100 movies using the IMDB ID you collected in Step 2. To use this API, you will
+#need to register for an (free) account and get your API Key, which is a long string. For example, if
+#your API key is sfhdskfhdskfhsakfd, this URL fetches a JSON response for the movie “The
+#Shawshank Redemption”, which has IMDB ID tt0111161:
+#http://api.themoviedb.org/3/find/tt0111161?api_key=sfhdskfhdskfhsakfd&external_source=imdb_id
+
+#You should see this JSON response:
+#jsonresponse = {"movie_results":[{"adult":false,
+#                                  "backdrop_path":"/xBKGJQsAIeweesB79KC89FpBrVr.jpg",
+#                                  "id":278,"original_title":"The ShawshankRedemption",
+#                                  "release_date":"1994-09-14",
+#                                  "poster_path":"/9O7gLzmreU0nGkIB6K3BsJbzvNv.jpg",
+#                                  "popularity":4.53744570017064,
+#                                  "title":"The ShawshankRedemption",
+#                                 "video":false,
+#                                  "vote_average":8.1,
+#                                  "vote_count":3588}],
+#    "person_results":[],
+#       "tv_results":[],
+#            "tv_episode_results":[],
+#                "tv_season_results":[]}
+#
+#The "vote_average":8.1 number is the themoviedb.org rating we would like to compare to IMDB ratings.
+#
+#IMPORTANT! You MUST pause 10 seconds between EVERY HTTP request to
+#themoviedb.org. If you don’t do this, and send requests omdbapi.com continuously in a
+#loop with no delay, the server may reject your request.
+#HINT: Use the sleep(x) function in the time module after each HTTP request to
+#pause x seconds.
+#Save your results in a text file named step3.txt that contains the IMDB ID and the JSON string
+#(separated by a tab) for each movie on each line. The file should look like
+#step3_desired_output.txt
+
+import json
+import csv
+import sys
+import urllib2
+import time
+import requests
+
+reload(sys)
+sys.setdefaultencoding('utf-8')
+
+url_preid = r'http://api.themoviedb.org/3/find/' 
+params = {}
+params['api_key']=r'96234b4f2cc4b218965880e59345dadc'
+params['external_source']=r'imdb_id'
+
+#Takes a row from a csv reader and grabs the title
+def get_id(row):
+    row_str =row[0]
+    row_str_split = row_str.split()
+    imdb_id = row_str_split[0]
+    return imdb_id
+
+def baseurl_join(row, myurl_pre):
+    myid = get_id(row)
+    baseurl = myurl_pre+myid
+    return baseurl
+
+def json_req(row):
+    base_url = baseurl_join(row, url_preid)
+    response = requests.get(base_url, params=params)
+    resp_str = response.text.encode('utf-8')
+    json_dict = json.loads(resp_str)
+    return json_dict
+
+def json_brute(row):
+    base_url = baseurl_join(row, url_preid)
+    url = base_url+'?api_key='+params['api_key']+'&external_source='+params['external_source']
+    response = urllib2.urlopen(url)
+    reader = response.read()
+    return reader
+
+f = r'hw2_p2_s2_out.txt'
+fhand = open(f, 'rb')
+reader = csv.reader(fhand)
+
+fout = r'hw3_p2_s3_out.txt'
+outhand = open(fout, 'wb')
+
+for num, i in enumerate(reader):
+    if num==0:
+        continue
+    else:
+        #writer.writerow([get_id(i), json_brute(i)])
+        outhand.write(get_id(i)+'\t')
+        outhand.write(json_brute(i)+'\n')
+        time.sleep(10)
+        
+
+outhand.close()
+fhand.close()
+
+print 'Program finished'
+
