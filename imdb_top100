@@ -1,0 +1,65 @@
+# -*- coding: utf-8 -*-
+
+#Parse the HTML page above with BeautifulSoup, extract movie information for top 100 movies as
+#described below, and save the result in a tab-delimited file named step2.txt. Note that the HTML
+#page contains top 250 movies, but we only need the top 100 movies. Your step2.txt file
+#should have 3 columns and 100 rows. The 3 columns should be: IMDB_ID, Title, IMDB Rating
+#
+#The IMDB_ID is the part that sits between last two slashes in the movie URL in the table. For
+#example, the first movie has href="/title/tt0111161/?ref_=chttp_tt_1", so the
+#IMDB ID is tt0111161
+
+import sys
+import urllib2
+from bs4 import BeautifulSoup
+import json
+import csv
+
+#Make sure there are no unicode errors in the document
+reload(sys)
+sys.setdefaultencoding('utf-8')
+
+#-----------------------------------------------------------------------------
+# PART 1: FUNCTIONS
+#-----------------------------------------------------------------------------
+
+def get_imdbid(table_row):
+    row_link = row.find('td', class_='titleColumn').a.get('href')
+    row_link_split = row_link.split('/')
+    row_id = row_link_split[2]
+    return row_id
+
+def get_title(tablerow):
+    row_title = row.find('td', class_='titleColumn').a.text
+    return row_title
+
+def get_rating(tablerow):
+    row_rating=row.find('td', class_='ratingColumn imdbRating').text
+    return row_rating
+
+#-----------------------------------------------------------------------------
+# PART 2: RUNNING THE CODE
+#-----------------------------------------------------------------------------
+
+f = r'hw3_P2_s1_out.html'
+fhand = open(f)
+soup = BeautifulSoup(fhand)
+
+titles_tblrows = soup.find('tbody', class_='lister-list').find_all('tr')
+
+fout = 'hw3_p2_s2_out.txt'
+outhand = open(fout, 'wb')
+field_names = ['IMDB_ID', 'Title', 'IMDB Rating']
+writer = csv.DictWriter(outhand, fieldnames=field_names, delimiter='\t')
+
+for num, row in enumerate(titles_tblrows):
+    if num<100:
+        writer.writerow({field_names[0]:get_imdbid(row), field_names[1]:get_title(row), field_names[2]:float(get_rating(row))})
+        
+outhand.close()
+fhand.close()
+
+#print 'Program finished'
+        
+
+
