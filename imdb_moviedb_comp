@@ -1,0 +1,76 @@
+# -*- coding: utf-8 -*-
+
+#After you verify that your step 3 output is correct, you can comment out your URL fetching
+#code for step 3 to avoid running that time-consuming step from now on. Now open the file
+#you saved in step 3, load the JSON string on each line into a variable, extract just the
+#‘vote_average’ numbers, and then join it with the IMDB data based on the IMDB IDs. Save your
+#results in a CSV file named step4.csv, which should have the following columns
+#'IMDB ID', 'title', 'IMDB rating', 'themoviedb rating'
+#The file should look like step4_desired_output.csv
+
+import sys
+import csv
+import json
+
+reload(sys)
+sys.setdefaultencoding('utf-8')
+
+#-----------------------------------------------------------------------------
+# PART 1: FUNCTIONS
+#-----------------------------------------------------------------------------
+
+#Takes a row, loads a json object (from the document created from themoviedb data)
+def load_json(row):
+    imdb_id = row[0]
+    json_str = row[1]
+    json_dict = json.loads(json_str)
+    return (imdb_id, json_dict)
+    
+
+#Extracts 'vote_average' from json object (which came from themoviedb)
+def get_average(row, mykey):
+    movie_results = load_json(row)[1]['movie_results'][0][mykey]
+    return movie_results
+
+
+
+#-----------------------------------------------------------------------------
+# PART 2: RUNNING THE CODE
+#-----------------------------------------------------------------------------
+
+#Tuple containing with the first value being the label for themoviedb rating that will be used as the field in the final document
+#The second value is the key in the json object corresponding to the desired rating value
+rating_label_key = ('themoviedb rating', 'vote_average')
+
+field_names = ['IMDB_ID', 'Title', 'IMDB Rating', rating_label_key[0]]
+
+#Opens the file from step 3, which contains the average ratings from themoviedb
+f_mdb = r'hw2_p2_s3_out.txt'
+fmdbhand = open(f_mdb, 'rb')
+mdb_reader = csv.reader(fmdbhand, delimiter='\t')
+
+#Opens the file from step 2, which contains IMDB_ID, title, and rating
+#Writes imdb file to a list
+f_imdb = r'hw2_p2_s2_out.txt'
+fimdb_hand = open(f_imdb, 'rb')
+imdb_reader = csv.reader(fimdb_hand, delimiter='\t')
+imdb_list = [x for x in imdb_reader]
+
+#Opens output file, creates writer object
+f_out = r'hw3_p2_s4_out.csv'
+fout_hand = open(f_out, 'wb')
+out_writer = csv.writer(fout_hand)
+
+out_writer.writerow(field_names)
+
+for num, i in enumerate(mdb_reader):
+    for r_imdb in imdb_list:
+        if i[0]==r_imdb[0]:
+            newlist = []
+            newlist.extend(r_imdb)
+            newlist.append(get_average(i, rating_label_key[1]))
+            out_writer.writerow(newlist)
+        else:
+            continue
+        
+        
